@@ -1,0 +1,28 @@
+{
+  "name": "gnosis-guild-engineering-blog",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:gnosisguild/engineering-blog.git",
+  "author": "samepant <sampanter@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^14.2.2",
+    "nextra": "^2.13.4",
+    "prism-react-renderer": "1.1.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "@mdx-js/react": "^1.6.18",
+    "@sindresorhus/slugify": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.12.7",
+    "@types/react": "18.2.69",
+    "tsx": "4.7.2",
+    "typescript": "5.4.5"
+  }
+}

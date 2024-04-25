@@ -1,0 +1,21 @@
+:root {
+  --max-width: 800px;
+  --background: ghostwhite;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  font-size: 20px;
+  line-height: 1.7;
+  color: #333;
+  background-color: var(--background);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
