@@ -3,74 +3,8 @@ import { MDXProvider } from "@mdx-js/react";
 import slugify from "@sindresorhus/slugify";
 import Link from "next/link";
 import React from "react";
-import Highlight, { defaultProps, PrismTheme } from "prism-react-renderer";
+import { Highlight } from "prism-react-renderer";
 import styles from "./theme.module.css";
-
-const THEME = {
-  plain: {
-    color: "#000",
-    backgroundColor: "transparent",
-  },
-  styles: [
-    {
-      types: ["keyword"],
-      style: {
-        color: "#ff0078",
-        fontWeight: "bold",
-      },
-    },
-    {
-      types: ["comment"],
-      style: {
-        color: "#999",
-        fontStyle: "italic",
-      },
-    },
-    {
-      types: ["string", "url", "attr-value"],
-      style: {
-        color: "#028265",
-      },
-    },
-    {
-      types: ["variable", "language-javascript"],
-      style: {
-        color: "#c6c5fe",
-      },
-    },
-    {
-      types: ["builtin", "char", "constant"],
-      style: {
-        color: "#000",
-      },
-    },
-    {
-      types: ["attr-name"],
-      style: {
-        color: "#d9931e",
-        fontStyle: "normal",
-      },
-    },
-    {
-      types: ["punctuation", "operator"],
-      style: {
-        color: "#333",
-      },
-    },
-    {
-      types: ["number", "function", "tag"],
-      style: {
-        color: "#0076ff",
-      },
-    },
-    {
-      types: ["boolean", "regex"],
-      style: {
-        color: "#d9931e",
-      },
-    },
-  ] as PrismTheme["styles"],
-};
 
 // Anchor links
 
@@ -146,20 +80,15 @@ const A = ({ children, ...props }) => {
 };
 
 const Code = ({ children, className, highlight, ...props }) => {
+  console.log("code", children, className, highlight);
   if (!className) return <code {...props}>{children}</code>;
-
   const highlightedLines = highlight ? highlight.split(",").map(Number) : [];
 
   // https://mdxjs.com/guides/syntax-highlighting#all-together
   const language = className.replace(/language-/, "");
   return (
     <div className={styles.codeContainer}>
-      <Highlight
-        {...defaultProps}
-        code={children.trim()}
-        language={language}
-        theme={THEME}
-      >
+      <Highlight code={children.trim()} language={language}>
         {({ className, style, tokens, getLineProps, getTokenProps }) => (
           <code className={className} style={{ ...style }}>
             {tokens.map((line, i) => (
@@ -199,5 +128,6 @@ const components = {
 };
 
 export default ({ children }) => {
+  console.log(components, children);
   return <MDXProvider components={components}>{children}</MDXProvider>;
 };

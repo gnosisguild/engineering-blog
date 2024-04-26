@@ -55,8 +55,11 @@
 
 .main {
   max-width: var(--max-width);
-  margin: 100px auto 50px;
-  padding: 1rem;
+  padding: 100px 1rem 1rem;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .tagContainer {
@@ -66,10 +69,10 @@
 }
 
 .tag {
-  background-color: navajowhite;
+  background-color: #e0e0e0;
   padding: 0 0.5rem;
   border-radius: 5px;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   text-decoration: none;
   color: darkslateblue;
   cursor: pointer;
@@ -82,4 +85,55 @@
 .codeContainer {
   max-width: 100%;
   overflow: scroll;
+}
+
+.postMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+  border-left: 3px solid #e0e0e0;
+  padding: 0.5em;
+  font-size: 0.8rem;
+}
+
+.creation {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+}
+
+.divider {
+  height: 1.5em;
+  width: 1px;
+  background-color: black;
+}
+
+.postItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+}
+
+.postItem h3,
+.postItem p {
+  margin: 0;
+}
+
+.postList {
+  display: flex;
+  flex-direction: column;
+  gap: 2em;
+}
+
+.postItem a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.postDescription a {
+  border-bottom: 1px solid;
+  font-size: 0.8rem;
+}
+.postDate {
+  font-size: 0.8rem;
 }

@@ -8,26 +8,29 @@ export default function Meta({ author, date, tag, back }) {
   const tags = tag ? tag.split(",").map((s) => s.trim()) : [];
 
   return (
-    <div className="meta-line">
-      <div className="meta">
+    <div className={styles.postMeta}>
+      <div className={styles.creation}>
         <div className={styles.author}>{authorNode}</div>
+        <div className={styles.divider} />
         <div className={styles.date}>{dateNode}</div>
-        <div className={styles.tagContainer}>
-          {tags.map((t) => {
-            return (
-              <Link
-                key={t}
-                href="/tags/[tag]"
-                as={`/tags/${t}`}
-                className={styles.tag}
-              >
-                {t}
-              </Link>
-            );
-          })}
-        </div>
       </div>
-      {back ? <Link href={back}>Back</Link> : null}
+      <div className={styles.tagContainer}>
+        {tags.map((t) => {
+          return (
+            <Link
+              key={t}
+              href="/tags/[tag]"
+              as={`/tags/${t}`}
+              className={styles.tag}
+            >
+              {t}
+            </Link>
+          );
+        })}
+      </div>
+      {/* <div className={styles.backlink}>
+        {back ? <Link href={back}>← Back</Link> : null}
+      </div> */}
     </div>
   );
 }

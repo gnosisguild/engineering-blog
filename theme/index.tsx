@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOMServer from "react-dom/server";
+
 import Head from "next/head";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -9,7 +9,7 @@ import Nav from "./nav";
 import MDXTheme from "./mdx-theme";
 
 import traverse from "./utils/traverse";
-import getTitle from "./utils/get-title";
+
 import getTags from "./utils/get-tags";
 import sortDate from "./utils/sort-date";
 import { NextraThemeLayoutProps } from "nextra";
@@ -25,9 +25,7 @@ const Layout = ({
   title,
   children,
 }) => {
-  const [titleNode, contentNodes] = getTitle(children);
   const type = frontMatter.type || "post";
-
   return (
     <React.Fragment>
       <Head>
@@ -46,12 +44,12 @@ const Layout = ({
         </Link>
       </header>
       <article className={styles.main}>
-        <h1 className={styles.title}>{title}</h1>
+        {type === "post" && <h1 className={styles.title}>{title}</h1>}
         {type === "post" && (
           <Meta {...frontMatter} back={back} config={config} />
         )}
         <MDXTheme>
-          {contentNodes}
+          {children}
           {type === "post" ? config.postFooter : null}
         </MDXTheme>
         {postList}
@@ -166,7 +164,7 @@ export default (props: NextraThemeLayoutProps) => {
   const title = props.pageOpts.frontMatter.title || "Untitled post";
 
   const postList = posts ? (
-    <ul>
+    <ul className={styles.postList}>
       {posts.map((post) => {
         if (tagName) {
           const tags = getTags(post);
@@ -180,27 +178,27 @@ export default (props: NextraThemeLayoutProps) => {
         const postTitle =
           (post.frontMatter ? post.frontMatter.title : null) || post.name;
         const postDate = post.frontMatter ? (
-          <time className="post-item-date">
+          <time className={styles.postDate}>
             {new Date(post.frontMatter.date).toDateString()}
           </time>
         ) : null;
         const postDescription =
           post.frontMatter && post.frontMatter.description ? (
-            <p className="post-item-desc">
-              {post.frontMatter.description}
+            <div className={styles.postDescription}>
+              <p>{post.frontMatter.description}</p>
               {config.readMore ? (
                 <Link href={post.route}>{config.readMore}</Link>
               ) : null}
-            </p>
+            </div>
           ) : null;
 
         return (
-          <div key={post.route} className="post-item">
+          <div key={post.route} className={styles.postItem}>
             <h3>
               <Link href={post.route}>{postTitle}</Link>
             </h3>
-            {postDescription}
             {postDate}
+            {postDescription}
           </div>
         );
       })}
