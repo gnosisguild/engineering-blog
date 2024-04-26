@@ -128,6 +128,5 @@ const components = {
 };
 
 export default ({ children }) => {
-  console.log(components, children);
   return <MDXProvider components={components}>{children}</MDXProvider>;
 };
