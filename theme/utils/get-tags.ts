@@ -1,7 +1,7 @@
 export default function getTags(page) {
   if (!page.frontMatter) {
-    return [];
+    return []
   }
-  const tags = page.frontMatter.tag || "";
-  return tags.split(",").map((s) => s.trim());
+  const tags = page.frontMatter.tag || ""
+  return tags.split(",").map((s) => s.trim())
 }

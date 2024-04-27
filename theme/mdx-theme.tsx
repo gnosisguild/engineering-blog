@@ -1,15 +1,15 @@
-import ReactDOMServer from "react-dom/server";
-import { MDXProvider } from "@mdx-js/react";
-import slugify from "@sindresorhus/slugify";
-import Link from "next/link";
-import React from "react";
-import { Highlight } from "prism-react-renderer";
-import styles from "./theme.module.css";
+import ReactDOMServer from "react-dom/server"
+import { MDXProvider } from "@mdx-js/react"
+import slugify from "@sindresorhus/slugify"
+import Link from "next/link"
+import React from "react"
+import { Highlight } from "prism-react-renderer"
+import styles from "./theme.module.css"
 
 // Anchor links
 
 const HeaderLink = ({ tag: Tag, children, ...props }) => {
-  const slug = slugify(ReactDOMServer.renderToStaticMarkup(children));
+  const slug = slugify(ReactDOMServer.renderToStaticMarkup(children))
   return (
     <Tag {...props}>
       <span className="subheading-anchor" id={slug} />
@@ -20,72 +20,72 @@ const HeaderLink = ({ tag: Tag, children, ...props }) => {
         </span>
       </a>
     </Tag>
-  );
-};
+  )
+}
 
 const H2 = ({ children, ...props }) => {
   return (
     <HeaderLink tag="h2" {...props}>
       {children}
     </HeaderLink>
-  );
-};
+  )
+}
 
 const H3 = ({ children, ...props }) => {
   return (
     <HeaderLink tag="h3" {...props}>
       {children}
     </HeaderLink>
-  );
-};
+  )
+}
 
 const H4 = ({ children, ...props }) => {
   return (
     <HeaderLink tag="h4" {...props}>
       {children}
     </HeaderLink>
-  );
-};
+  )
+}
 
 const H5 = ({ children, ...props }) => {
   return (
     <HeaderLink tag="h5" {...props}>
       {children}
     </HeaderLink>
-  );
-};
+  )
+}
 
 const H6 = ({ children, ...props }) => {
   return (
     <HeaderLink tag="h6" {...props}>
       {children}
     </HeaderLink>
-  );
-};
+  )
+}
 
 const A = ({ children, ...props }) => {
-  const isExternal = props.href && props.href.startsWith("https://");
+  const isExternal = props.href && props.href.startsWith("https://")
   if (isExternal) {
     return (
       <a target="_blank" {...props}>
         {children}
       </a>
-    );
+    )
   }
   return (
     <Link href={props.href} {...props}>
       {children}
     </Link>
-  );
-};
+  )
+}
 
 const Code = ({ children, className, highlight, ...props }) => {
-  console.log("code", children, className, highlight);
-  if (!className) return <code {...props}>{children}</code>;
-  const highlightedLines = highlight ? highlight.split(",").map(Number) : [];
+  console.log("code", children, className, highlight)
+  if (!className) return <code {...props}>{children}</code>
+  const highlightedLines = highlight ? highlight.split(",").map(Number) : []
 
   // https://mdxjs.com/guides/syntax-highlighting#all-together
-  const language = className.replace(/language-/, "");
+  const language = className.replace(/language-/, "")
   return (
     <div className={styles.codeContainer}>
       <Highlight code={children.trim()} language={language}>
@@ -114,8 +114,8 @@ const Code = ({ children, className, highlight, ...props }) => {
         )}
       </Highlight>
     </div>
-  );
-};
+  )
+}
 
 const components = {
   h2: H2,
@@ -125,8 +125,8 @@ const components = {
   h6: H6,
   a: A,
   code: Code,
-};
+}
 
 export default ({ children }) => {
-  return <MDXProvider components={components}>{children}</MDXProvider>;
-};
+  return <MDXProvider components={components}>{children}</MDXProvider>
+}
