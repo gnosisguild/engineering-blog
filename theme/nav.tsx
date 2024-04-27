@@ -1,5 +1,5 @@
-import React from "react";
-import Link from "next/link";
+import React from "react"
+import Link from "next/link"
 
 export default function Nav({ navPages }) {
   return (
@@ -10,14 +10,14 @@ export default function Nav({ navPages }) {
             <span key={page.route} className="nav-link">
               {page.frontMatter.title || page.name}
             </span>
-          );
+          )
         }
         return (
           <Link key={page.route} href={page.route}>
             {page.frontMatter.title || page.name}
           </Link>
-        );
+        )
       })}
     </div>
-  );
+  )
 }

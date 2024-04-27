@@ -1,20 +1,20 @@
-import React from "react";
+import React from "react"
 
-import Head from "next/head";
-import Link from "next/link";
-import { useRouter } from "next/router";
+import Head from "next/head"
+import Link from "next/link"
+import { useRouter } from "next/router"
 
-import Meta from "./meta";
-import Nav from "./nav";
-import MDXTheme from "./mdx-theme";
+import Meta from "./meta"
+import Nav from "./nav"
+import MDXTheme from "./mdx-theme"
 
-import traverse from "./utils/traverse";
+import traverse from "./utils/traverse"
 
-import getTags from "./utils/get-tags";
-import sortDate from "./utils/sort-date";
-import { NextraThemeLayoutProps } from "nextra";
-import Image from "next/image";
-import styles from "./theme.module.css";
+import getTags from "./utils/get-tags"
+import sortDate from "./utils/sort-date"
+import { NextraThemeLayoutProps } from "nextra"
+import Image from "next/image"
+import styles from "./theme.module.css"
 
 const Layout = ({
   config,
@@ -25,7 +25,7 @@ const Layout = ({
   title,
   children,
 }) => {
-  const type = frontMatter.type || "post";
+  const type = frontMatter.type || "post"
   return (
     <React.Fragment>
       <Head>
@@ -55,7 +55,7 @@ const Layout = ({
         {postList}
         <div className={styles.footer}>
           <a
-            href="https://discord.gg/2jnnJx3Y"
+            href="https://discord.gg/r3zruFh6GK"
             target="_blank"
             rel="noopener noreferrer"
           >
@@ -94,26 +94,26 @@ const Layout = ({
         </div>
       </article>
     </React.Fragment>
-  );
-};
+  )
+}
 
 export default (props: NextraThemeLayoutProps) => {
-  const { themeConfig, pageOpts } = props;
+  const { themeConfig, pageOpts } = props
   const config = Object.assign(
     {
       postFooter: null,
     },
     themeConfig
-  );
+  )
 
   // gather info for tag/posts pages
-  let posts = null;
-  let navPages = [];
-  const type = pageOpts.frontMatter.type || "post";
-  const route = pageOpts.route;
+  let posts = null
+  let navPages = []
+  const type = pageOpts.frontMatter.type || "post"
+  const route = pageOpts.route
   // This only renders once per page
   if (type === "posts" || type === "tag" || type === "page") {
-    posts = [];
+    posts = []
     // let's get all posts
     traverse(pageOpts.pageMap, (page) => {
       if (
@@ -121,67 +121,67 @@ export default (props: NextraThemeLayoutProps) => {
         ["page", "posts"].includes(page.frontMatter.type)
       ) {
         if (page.route === route) {
-          navPages.push({ ...page, active: true });
+          navPages.push({ ...page, active: true })
         } else {
-          navPages.push(page);
+          navPages.push(page)
         }
       }
 
       if (type !== "page" && page.route && page.route.startsWith("/posts/")) {
-        posts.push(page);
+        posts.push(page)
       }
-    });
-    posts = posts.sort(sortDate);
-    navPages = navPages.sort(sortDate);
+    })
+    posts = posts.sort(sortDate)
+    navPages = navPages.sort(sortDate)
   }
 
   // back button
-  let back = null;
+  let back = null
   if (type !== "post") {
-    back = null;
+    back = null
   } else {
-    const parentPages = [];
+    const parentPages = []
     traverse(pageOpts.pageMap, (page) => {
       if (
         route !== page.route &&
         (route + "/").startsWith(page.route === "/" ? "/" : page.route + "/")
       ) {
-        parentPages.push(page);
+        parentPages.push(page)
       }
-    });
+    })
     const parentPage = parentPages
       .reverse()
-      .find((page) => page.frontMatter && page.frontMatter.type === "posts");
+      .find((page) => page.frontMatter && page.frontMatter.type === "posts")
     if (parentPage) {
-      back = parentPage.route;
+      back = parentPage.route
     }
   }
 
-  const router = useRouter();
-  const { query } = router;
+  const router = useRouter()
+  const { query } = router
 
-  const tagName = type === "tag" ? query.tag : null;
-  const title = props.pageOpts.frontMatter.title || "Untitled post";
+  const tagName = type === "tag" ? query.tag : null
+  const title = props.pageOpts.frontMatter.title || "Untitled post"
 
   const postList = posts ? (
     <ul className={styles.postList}>
       {posts.map((post) => {
         if (tagName) {
-          const tags = getTags(post);
+          const tags = getTags(post)
           if (!tags.includes(tagName)) {
-            return null;
+            return null
           }
         } else if (type === "tag") {
-          return null;
+          return null
         }
 
         const postTitle =
-          (post.frontMatter ? post.frontMatter.title : null) || post.name;
+          (post.frontMatter ? post.frontMatter.title : null) || post.name
         const postDate = post.frontMatter ? (
           <time className={styles.postDate}>
             {new Date(post.frontMatter.date).toDateString()}
           </time>
-        ) : null;
+        ) : null
         const postDescription =
           post.frontMatter && post.frontMatter.description ? (
             <div className={styles.postDescription}>
@@ -190,7 +190,7 @@ export default (props: NextraThemeLayoutProps) => {
                 <Link href={post.route}>{config.readMore}</Link>
               ) : null}
             </div>
-          ) : null;
+          ) : null
 
         return (
           <div key={post.route} className={styles.postItem}>
@@ -200,10 +200,10 @@ export default (props: NextraThemeLayoutProps) => {
             {postDate}
             {postDescription}
           </div>
-        );
+        )
       })}
     </ul>
-  ) : null;
+  ) : null
 
   return (
     <Layout
@@ -215,5 +215,5 @@ export default (props: NextraThemeLayoutProps) => {
       {...pageOpts}
       {...props}
     />
-  );
-};
+  )
+}
