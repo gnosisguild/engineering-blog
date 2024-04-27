@@ -112,6 +112,7 @@ export default (props: NextraThemeLayoutProps) => {
   const type = pageOpts.frontMatter.type || "post"
   const route = pageOpts.route
   // This only renders once per page
+  
   if (type === "posts" || type === "tag" || type === "page") {
     posts = []
     // let's get all posts
@@ -127,7 +128,7 @@ export default (props: NextraThemeLayoutProps) => {
         }
       }
 
-      if (type !== "page" && page.route && page.route.startsWith("/posts/")) {
+      if (type !== "page" && page.frontMatter && page.route && page.route.startsWith("/posts/")) {
         posts.push(page)
       }
     })
