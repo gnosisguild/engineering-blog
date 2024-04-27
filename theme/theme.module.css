@@ -55,7 +55,7 @@
 .main {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: 100px 1rem 1rem;
+  padding: 150px 1rem 1rem;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -122,7 +122,7 @@
 .postList {
   display: flex;
   flex-direction: column;
-  gap: 2em;
+  gap: 4em;
 }
 
 .postItem a {
