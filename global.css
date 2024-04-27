@@ -23,3 +23,27 @@ ul {
   padding: 0;
   margin: 0;
 }
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+figure {
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+}
+figure p {
+  margin: 0;
+}
+
+figcaption {
+  font-size: 0.8em;
+  color: #777;
+}
+
+hr {
+  border: none;
+  border-bottom: 1px solid #ccc;
+  width: 100%;
+}
