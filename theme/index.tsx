@@ -55,7 +55,7 @@ const Layout = ({
         {postList}
         <div className={styles.footer}>
           <a
-            href="https://discord.gg/2jnnJx3Y"
+            href="https://discord.gg/r3zruFh6GK"
             target="_blank"
             rel="noopener noreferrer"
           >
