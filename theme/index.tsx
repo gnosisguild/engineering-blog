@@ -32,8 +32,12 @@ const Layout = ({
       <Head>
         <title>{title}</title>
         {config.head || null}
+        <Script
+          async
+          data-uid="e86862379a"
+          src="https://gnosis-guild-engineering.ck.page/e86862379a/index.js"
+        />
       </Head>
-      <Script async src="/mailerlite.js" />
       <header className={styles.header}>
         <Link href="/" className={styles.logoContainer}>
           <Image
@@ -56,6 +60,12 @@ const Layout = ({
         </MDXTheme>
         {postList}
         <div className={styles.footer}>
+          <a
+            data-formkit-toggle="e86862379a"
+            href="https://gnosis-guild-engineering.ck.page"
+          >
+            Get notified about new posts
+          </a>
           <a
             href="https://discord.gg/r3zruFh6GK"
             target="_blank"
