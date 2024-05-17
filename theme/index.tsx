@@ -15,6 +15,7 @@ import sortDate from "./utils/sort-date"
 import { NextraThemeLayoutProps } from "nextra"
 import Image from "next/image"
 import styles from "./theme.module.css"
+import Script from "next/script"
 
 const Layout = ({
   config,
@@ -31,9 +32,8 @@ const Layout = ({
       <Head>
         <title>{title}</title>
         {config.head || null}
-
-        <script async src="/mailerlite.js"></script>
       </Head>
+      <Script async src="/mailerlite.js" />
       <header className={styles.header}>
         <Link href="/" className={styles.logoContainer}>
           <Image
