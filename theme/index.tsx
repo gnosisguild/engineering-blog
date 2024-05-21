@@ -15,7 +15,6 @@ import sortDate from "./utils/sort-date"
 import { NextraThemeLayoutProps } from "nextra"
 import Image from "next/image"
 import styles from "./theme.module.css"
-import Script from "next/script"
 
 const Layout = ({
   config,
@@ -32,11 +31,6 @@ const Layout = ({
       <Head>
         <title>{title}</title>
         {config.head || null}
-        <Script
-          async
-          data-uid="e86862379a"
-          src="https://gnosis-guild-engineering.ck.page/e86862379a/index.js"
-        />
       </Head>
       <header className={styles.header}>
         <Link href="/" className={styles.logoContainer}>
@@ -60,10 +54,7 @@ const Layout = ({
         </MDXTheme>
         {postList}
         <div className={styles.footer}>
-          <a
-            data-formkit-toggle="e86862379a"
-            href="https://gnosis-guild-engineering.ck.page"
-          >
+          <a href="https://gnosis-guild-engineering.ck.page">
             Get notified about new posts
           </a>
           <a
