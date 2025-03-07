@@ -32,6 +32,11 @@ img {
   height: auto;
 }
 
+p > img {
+  display: block;
+  margin: 0 auto;
+}
+
 figure {
   margin-inline-start: 0;
   margin-inline-end: 0;
