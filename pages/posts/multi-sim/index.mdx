@@ -1,7 +1,7 @@
 ---
 title: >
   Multi-Sim: Stop Signing Blindly
-date: 2025/03/07
+date: 2025/03/11
 description: >
   The $1.5B Bybit hack has reignited one of the most fundamental vulnerabilities in crypto security: blind signing. When users approve transactions on their hardware wallets, they're often shown an indecipherable blob of hex data. They're trusting that the front-end they used to prepare the transaction is showing them the same reality they're about to sign. In Bybit's case, that trust was catastrophically misplaced. It's time to rethink how we verify transactions — starting with how we leverage hardware wallets, and ultimately by introducing a new paradigm we call "multi-sim".
 author: jfschwarz
@@ -80,6 +80,8 @@ The user's desktop wallet interface collects these reports and forwards them to 
 - **Verifies signatures** of all reports .
 - **Cross-checks** the content for consistency across all reports.
 - Presents a final, **human-readable summary** to the user, showing the decoded calls, token flows, events, and state changes.
+
+![Multi-sim flow sketch](./multi-sim-sketch.png)
 
 ## Deriving Security from Redundancy
 
