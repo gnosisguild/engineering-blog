@@ -1,0 +1,256 @@
+---
+title: Post-Mortem – ERC-1271 Authorization Bypass in Zodiac Roles Modifier v2.1.0 and Delay Modifier v1.1.0
+date: 2026/06/19
+description: A post-mortem of the June 2026 ERC-1271 authorization bypass in Zodiac Roles Modifier v2.1.0 and Delay Modifier v1.1.0 — root cause, impact, containment, and lessons learned. The modules' contract-signature check accepted a magic value without verifying the staticcall succeeded, letting an unauthorized caller pass as an authenticated module or role member.
+author: jfschwarz
+---
+
+**Status:** Release version 1.0  
+**Severity:** Critical — authentication bypass enabling unauthorized module execution and theft of funds  
+**Affected components:** Zodiac Roles Modifier v2.1.0 · Zodiac Delay Modifier v1.1.0  
+**Primary contact:** [security@gnosisguild.org](mailto:security@gnosisguild.org)  
+**Public disclosure:** [Zodiac community notice, 2 Jun 2026](https://x.com/zodiaceco/status/2061862711206502902)  
+**Date of publication:** 19 Jun 2026
+
+---
+
+## 1\. Executive summary
+
+On **1 June 2026**, an attacker exploited a vulnerability in the Zodiac module-authentication code shared by **Roles Modifier v2.1.0** and **Delay Modifier v1.1.0**. The flaw let an unauthorized external caller be treated as an authenticated module or role member, bypassing the access control these modules are meant to enforce.
+
+The root cause was narrow and specific: the modules' ERC-1271 contract-signature check accepted a signature as valid based **only** on the returned magic value, **without verifying that the underlying `staticcall` to the signer contract had actually succeeded**. A failed signature check that happened to leave return/revert data beginning with the ERC-1271 magic value (`0x1626ba7e`) was accepted as a valid signature. This was only exploitable in one configuration: a **Safe using the CompatibilityFallbackHandler** (all versions are affected) **assigned as a module on Delay Modifier v1.1.0, or as a role member on Roles Modifier v2.1.0**. EOA-only role members and setups without an affected module were never at risk.
+
+After identifying the root cause on 1 June, we immediately contacted identified affected users privately, published a self-service checker and remediation app, and disclosed publicly on 2 June. We continued whitehat recovery of remaining at-risk Safes in the following days. Patched modules — **Delay v1.1.1** and **Roles v2.1.1** — were released after passing an audit from Gnosis.
+
+Containment was largely successful: roughly 99.77% of Roles and 99.18% of Delay value at risk was secured before it could be taken, and confirmed realized loss outside Gnosis Pay was very limited — about $4500 across \~30 accounts holding mostly small amounts. Gnosis Pay, whose user account Safes use the Delay module, was the primary exploited deployment and is expected to report on its own accounts separately.
+
+## 2\. Impact
+
+### 2.1 Affected and unaffected
+
+**Affected modules**
+
+| Component             | Affected version | Patched version | Patch status         |
+| :-------------------- | :--------------- | :-------------- | :------------------- |
+| Zodiac Delay Modifier | v1.1.0           | v1.1.1          | Audited and deployed |
+| Zodiac Roles Modifier | v2.1.0           | v2.1.1          | Audited and deployed |
+
+**Affected precondition (both conditions required):**
+
+1. An affected module is enabled — Delay v1.1.0 or Roles v2.1.0; **and**
+2. A **Safe with the CompatibilityFallbackHandler (any version)** is assigned to that module — as a **module** (Delay) or **role member** (Roles).
+
+**Not affected:**
+
+- All other official Zodiac modules.
+- Role members that are EOAs (only contract members reachable via the fallback-handler path were exposed).
+- Any setup not meeting both preconditions above. (Example: the ENS endowment uses Roles v2 but was [confirmed unaffected by kpk](https://discuss.ens.domains/t/security-update-zodiac-roles-modifier-v2-and-delay-modifier-v1-1-0/22161) as the role member Safe did not use the CompatibilityFallbackHandler.)
+
+### 2.2 User and account impact
+
+| Metric                                      | Value                                                                                                                                                                       |
+| :------------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Affected accounts identified                | \~49,800 total — Gnosis Pay: 46,669 (taken over by attacker) · non-GP Delay: \~900 (226 taken over) · Roles: 2,227 at-risk avatars                                          |
+| Accounts with confirmed loss                | \~30 accounts outside of Gnosis Pay taken over while still holding funds (mostly very small amounts)                                                                        |
+| Total confirmed loss                        | Gnosis Pay: post-mortem pending; outside of Gnosis Pay: \~$4500                                                                                                             |
+| Accounts still exposed at final containment | Delay: 269 instances still at risk (\~$700 total value) · Roles: 1,529 instances still flagged at-risk (\~$200K total value), risk low given limited scope of permissions   |
+| Networks affected                           | Gnosis, Base, Ethereum; armed but not executed on: BSC, Polygon, Arbitrum                                                                                                   |
+| Assets affected                             | Roles: mainly LSTs (stETH, osETH, cbETH, swETH), COMP, RWA/BTC (cbBTC, WBTC, Ondo), curated-vault stablecoins. Delay/Gnosis Pay: USDC.e, GNO, EURe, GBPe, xDAI, USDC, arUSD |
+
+Roles \- **attributable value at risk** (per our attribution analysis): originally \~**$85,474,814** → now remaining \~**$200,000** (secured \~99.77%, no confirmed loss) – remaining risk is low because permissions don’t allow draining funds
+
+Delay \- **attributable value at risk:** originally \~**$633,564** (excluding Gnosis Pay accounts) → now remaining \~**$700** (secured \~99.18%, \~0.71% confirmed lost)
+
+**Note on the most visible deployment.** Gnosis Pay was the primary exploited deployment and accounts for the public reporting above. This post-mortem is about the **Zodiac module vulnerability**, which affected multiple deployments; Gnosis Pay is the largest known case, not the whole scope.
+
+### 2.3 On user losses
+
+The priority throughout this incident was to prevent loss, and most value at risk was secured before a successful exploitation: approximately **99.77% of Roles-attributable value** and **99.18% of Delay-attributable value** (per our attribution analysis). Confirmed realized losses outside of Gnosis Pay were negligible — on the order of $4500 across roughly 30 accounts, most of them holding very small amounts.
+
+The largest realized losses were concentrated in Gnosis Pay, the most exploited deployment. Gnosis Pay has publicly committed to cover its affected users' losses ([public statement](https://x.com/koeppelmann/status/2061372038628196356)); questions about Gnosis Pay reimbursement are handled directly by Gnosis Pay.
+
+Zodiac modules are open-source infrastructure, maintained by Gnosis Guild and made freely available; we charge no fees for their usage and are not in a position to operate a reimbursement program for downstream deployments. What we are responsible for, and what we have done, is to identify and fix the root cause, disclose it, ship free self-service tooling so any user could check and remediate their exposure and carry out whitehat recovery of at-risk accounts. We recognize that composability distributes responsibility across maintainers, integrators, and deploying products — and we take seriously the part of that responsibility that is ours.
+
+---
+
+## 3\. Background
+
+**Zodiac** is a set of modular smart-account tools that extend accounts such as Safes with additional execution logic. _Modules_ are contracts an account enables to make execution decisions; _modifiers_ (Delay, Roles) sit between modules and the account to constrain that behavior.
+
+- **Delay Modifier** enforces a time delay between when a transaction is queued by a module and when it can be executed, giving owners a window to cancel.
+- **Roles Modifier** is an on-chain permissions system: it grants scoped roles to addresses or modules and limits what each role member can execute.
+
+Two Ethereum/Safe primitives complete the picture:
+
+- **ERC-1271** ([EIP-1271](https://eips.ethereum.org/EIPS/eip-1271)) defines `isValidSignature(hash, signature)` so that **contract** accounts can validate signatures (they have no private key). A valid signature is signalled by returning the magic value `0x1626ba7e`.
+- **Safe fallback handlers** ([Safe docs](https://help.safe.global/articles/9256158266-what-is-a-fallback-handler-and-how-does-it-relate-to-safe)) let a Safe answer calls it doesn't natively implement. Safe's **CompatibilityFallbackHandler** implements ERC-1271 `isValidSignature` on the Safe's behalf — which is exactly the surface this vulnerability reached.
+
+The bug lived at the intersection of these three systems: Zodiac module authentication → ERC-1271 contract-signature validation → Safe fallback-handler behavior.
+
+## 4\. Root cause
+
+### 4.1 The technical flaw
+
+Both affected modules authenticate a call in one of two ways:
+
+1. `msg.sender` is itself an enabled module / role member (the direct path); or
+2. The call carries appended signature data proving an enabled module / role member authorized it (the **signed** path).
+
+The signed authorization path supported **ERC-1271 contract signatures**. To validate one, the affected Zodiac modules performed a `staticcall` to `isValidSignature` on the purported signer contract and then inspected the returned bytes. The defect was that the checker only verified whether the returned bytes matched the ERC-1271 magic value `0x1626ba7e`, but did not also require the `staticcall` itself to have succeeded.
+
+EIP-1271 is unambiguous about the success value, but it leaves rejection behavior less tightly specified: invalid signatures may return a non magic value, revert, or otherwise fail. Safe’s CompatibilityFallbackHandler uses the revert path for invalid signatures, and makes no assertions about `returnData`, while Zodiac only inspected the returned bytes and ignored whether the call itself succeeded. Both behaviors were individually plausible under ERC-1271’s loose failure semantics, but their composition created the authorization bypass.
+
+This logic was reachable through the modules' `moduleOnly()` / `moduleTxSignedBy()` authentication helpers, which parse and verify the signature from trailing calldata (`msg.data`) — including attacker-controlled bytes appended after the normal ABI parameters.
+
+### 4.2 Why the CompatibilityFallbackHandler was the trigger
+
+The flawed check alone was not enough. It became exploitable when ERC-1271 validation was performed against a Safe signer whose `isValidSignature` path was handled by CompatibilityFallbackHandler.
+
+The flow was:
+
+1. A Safe with the CompatibilityFallbackHandler is configured as a trusted **module** (Delay) or **role member** (Roles).
+2. The attacker calls the affected Zodiac module directly, appending crafted signature-like calldata.
+3. The module attempts ERC-1271 validation against the authorized Safe
+4. The Safe routes `isValidSignature` to its CompatibilityFallbackHandler.
+5. The attacker arranges for that call to **fail while leaving return/revert data beginning with `0x1626ba7e`**. The CompatibilityFallbackHandler allows this path as it propagates errors from untrusted third-party contracts unchecked.
+6. Because the Zodiac checker ignores the success boolean, the module treats the Safe as having validly signed.
+7. The attacker is now authenticated **as the trusted module / role member**, with no Safe owner key, no Safe signature, and no compromise of the Safe itself.
+
+Notably, the attacker did not break Safe, Safe owners, or Safe signatures. They abused a permissive check in the Zodiac module when composed with a legitimately configured Safe signer.
+
+The trick was to present the signer Safe with an unrelated onchain contract signer that always reverted with ERC-1271 magic value. Safe’s signature validation would fail, but the revert data would propagate through the fallback handler. The affected Zodiac module would then read those bytes, ignore that the call had reverted, and treat the signature as valid.
+
+### 4.3 Per-module impact path
+
+- **Delay v1.1.0:** `execTransactionFromModule()` is meant to be callable only by enabled modules. With authentication bypassed, the attacker could **queue unauthorized transactions** into the Delay queue. Whether a queued transaction ultimately executed depended on the account's cooldown, expiration, monitoring, and any cancellation/containment before execution — which is why short-cooldown configurations were the most dangerous (see §6).
+- **Roles v2.1.0:** authorization is role-membership-based. With the bypass, the attacker could act **as the trusted Safe role member** and attempt anything that role's scoped permissions allowed. Impact was bounded by the configured permissions — but those can be significant depending on the deployment.
+
+### 4.4 How long the flaw was latent
+
+- The success check was **removed on 28 Oct 2023** (commit [9a9e380](https://github.com/gnosisguild/zodiac/commit/9a9e38025ad7518f6e5350aeac673435a7db70f1)) in the legacy `@gnosis.pm/zodiac` package, which Delay v1.1.0 (Nov 2023\) and Roles v2.1.0 (Dec 2023\) were built against. This was a bytecode size optimization triggered by the development version of Roles v2.1.0 mastercopy hitting the EIP-170 limit.
+- The optimization was reverted as it was no longer required on **27 Feb 2026** (commit [11708ac](https://github.com/gnosisguild/zodiac-core/commit/11708aca2f75a29a0a8a40be6aa8e8b925e8c9ad)), effectively fixing the signature validation fault in the newer **zodiac-core** codebase (released as v4.0.0-alpha.0).
+- **Production Delay v1.1.0 / Roles v2.1.0 mastercopies were never updated as the security impact of this change was not recognized at the time**, so the deployed contracts remained vulnerable until the June incident.
+
+The corrected implementation, which incidentally fixed this vulnerability, was introduced as part of a refactor; the team was not aware of the vulnerability until 1 June.
+
+### 4.5 On-chain references
+
+For independent verification, the following on-chain artifacts relate to the incident:
+
+- **Attacker address:** `0x81ba8a2b895d30280bca199c2ff75f3f058d4c6c`
+
+- **Example exploit transaction:** `0x5ea42911c803ba2cf1cb558e88129102de9023980a5c73253d59407859ce2ce5`
+
+- **Vulnerable call path:** `Delay.execTransactionFromModule() → moduleOnly() → moduleTxSignedBy() → _isValidContractSignature()`
+
+Reach out to the team for more detailed information.
+
+---
+
+## 5\. Timeline
+
+| Time (CET)          | Event                                                                                                                                                                              | Source / status                                                  |
+| :------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------- |
+| 1 Jun 2026, \~09:59 | Gnosis Pay publicly reports an incident “related to the delay module,” urges users to withdraw.                                                                                    | [Gnosis Pay](https://x.com/gnosispay/status/2061372038628196356) |
+| 1 Jun 2026, \~10:30 | Zodiac joins an incident call with Gnosis Pay and SEAL 911 to trace the attack route.                                                                                              | Internal                                                         |
+| 1 Jun 2026, \~12:30 | Root cause identified; assessment of other potentially-affected Zodiac deployments begins; data-gathering on affected Delay/Roles deployments.                                     | Internal                                                         |
+| 1 Jun 2026, \~15:30 | Internal dashboard live to track recovery across all affected accounts and ongoing attribution efforts.                                                                            | Internal                                                         |
+| 1 Jun 2026, \~15:40 | Private outreach begins to all identified affected users with instructions to disable the affected modules.                                                                        | Internal                                                         |
+| 1 Jun 2026, 22:13   | Self-service checker \+ remediation app published ([app.zodiac.eco/public/fallback-handler](https://app.zodiac.eco/public/fallback-handler)).                                      | Internal                                                         |
+| 2 Jun 2026, 18:29   | Public disclosure: Zodiac community notice scoping the issue; \>95% of identifiable accounts already resolved.                                                                     | Internal                                                         |
+| 2 Jun 2026 onward   | Whitehat recovery of remaining vulnerable Safes; some custom-mastercopy accounts with short Delay timelocks were taken over before they could be secured and were addressed later. | Internal                                                         |
+| 19 Jun 2026         | Patched versions (Delay v1.1.1, Roles v2.1.1) released after passing third-party audit from Gnosis                                                                                 | Internal                                                         |
+
+---
+
+## 6\. Detection and response
+
+**Detection.** We were first alerted to active exploitation on **1 June 2026** \~**10:30 CET**, when the Gnosis Pay team reached out after identifying that some of their on-chain Delay module setups were being exploited.
+
+**Response.** After joining the incident call with Gnosis Pay and SEAL 911 and identifying the root cause, we:
+
+1. **Confirmed the vulnerable condition** — an affected module plus a Safe with the CompatibilityFallbackHandler assigned as module/role member.
+2. **Scoped affected deployments** — scanned known Delay v1.1.0 and Roles v2.1.0 deployments for the vulnerable configuration.
+3. **Prioritized by risk** — live module state, role membership, assets at risk, queued transactions, and **Delay cooldown length** (short timelocks were the most urgent), and available contact paths.
+4. **Notified affected users privately** — outreach began \~15:40 CET on 1 June with instructions to disable the affected modules.
+5. **Shipped self-service tooling** — a checker/remediation app ([app.zodiac.eco/public/fallback-handler](https://app.zodiac.eco/public/fallback-handler)) so any user could determine exposure and remediate.
+6. **Disclosed publicly** on 2 June once partners had acknowledged and most at-risk Safes were secured.
+7. **Coordinated with the ecosystem** — Gnosis Pay, Gnosis, Safe Labs, SEAL 911, and affected integrators.
+8. **Ran whitehat recovery** — secured remaining vulnerable Safes over the following days; some Safes with very short Delay timelocks were drained before they could be reached (confirmed total losses \~$4500 outside of Gnosis Pay).
+
+---
+
+## 7\. Remediation
+
+### 7.1 Immediate mitigations (interim guidance issued to users)
+
+- **Verify your setup** using [app.zodiac.eco/public/fallback-handler](https://app.zodiac.eco/public/fallback-handler) and follow the steps indicated by the application.
+- **Clear the fallback handler** on any Safe assigned as a module or role member to an affected module — this removes the ERC-1271 surface and neutralizes the bug without redeploying.
+- **Disable or replace** the affected module assignment where appropriate.
+- **For Delay setups, review and cancel** any malicious/pending queue entries before cooldown elapses.
+- **New deployments:** use the latest, patched modules rather than deploying affected versions.
+
+### 7.2 Code-level remediation
+
+The vulnerability has been resolved in the patched module mastercopies: **Delay v1.1.1**, **Roles v2.1.1**
+
+**Applied fix:** Require `staticcall` success for ERC-1271 validation — reject magic bytes from failed calls or revert data:
+
+```
+success && bytes4(returnData) == EIP1271_MAGIC_VALUE
+```
+
+Base contract fix landed in commit: [zodiac-core#11708ac](https://github.com/gnosisguild/zodiac-core/commit/11708aca2f75a29a0a8a40be6aa8e8b925e8c9ad#diff-c5f05ebf7705680d931f2b03b9f92d10e2fe7642f2df3ee1a7a0379595bf119d)
+
+Downstream mastercopies have been updated to the fixed version of the base contract.
+
+---
+
+## 8\. What went well
+
+- **Fast private remediation before disclosure.** Direct outreach began within hours of root-cause identification; shrinking the window in which exploit details were public but accounts still exposed. In particular, affected accounts of users of our app could be attributed immediately and reached promptly.
+- **Narrow, accurate public scope.** We communicated a specific affected configuration rather than a broad "all Safe/Zodiac users" alarm, and Safe Labs corroborated that Safe core was unaffected.
+- **Ecosystem coordination.** Gnosis Pay, Gnosis, Safe Labs, SEAL 911, and integrators aligned quickly on scope and containment.
+- **On-chain verifiability.** Because module config, fallback handlers, queues, and balances are on-chain, both internal and external researchers could independently scope exposure and verify remediation.
+
+## 9\. What did not go well
+
+- **An underspecified EIP-1271 was not sufficiently addressed with a more defensive implementation.** Being explicit about edge cases in the spec would have helped identify these potential issues. Nevertheless, in the absence of a clear specification, a more defensive implementation — with negative paths extensively covered in tests — would have been the sensible choice.
+- **Implicit signed authentication added avoidable complexity.** Inferring a signed execution from appended calldata in a generic modifier made the authentication surface harder to reason about and easier to overlook in audits.
+- **Remediation was account-by-account.** Because deployments are user-controlled and immutable, there was no single central patch; mitigation required scanning, outreach, and per-account action — and short-timelock custom-mastercopy Safes were attacked before they could be reached.
+
+## 10\. Where we got lucky
+
+- The vulnerable configuration was far narrower than "all Safes" or "all Roles/Delay users" — it required a contract member reachable via the CompatibilityFallbackHandler and the core access control mechanisms implemented by the modules (timelock / permission scoping) still held and effectively contained the damage.
+- Most identifiable affected accounts holding any significant value were contactable and remediable before disclosure.
+- Exposure and remediation were independently analyzable on-chain.
+- The economic damage was very limited, as far as our analysis shows — the initial attack focused narrowly on Gnosis Pay, and most other vulnerable accounts were remediated quickly.
+
+---
+
+## 11\. Lessons learned
+
+1. **Authentication code must treat negative paths as first-class.** Tests must cover failed calls, revert data, short/empty return data, code-less addresses, malformed contract signatures, and adversarial fallback handlers — not just "valid passes / invalid fails."
+2. **ERC-1271 integrations require strict handling.** Always require call success, validate return data precisely, and treat fallback-handler behavior as adversarial unless explicitly trusted. Be more explicit about edge cases already in the spec.
+3. **Composability needs a system-level threat model.** Zodiac's strength — combining modules, fallback handlers, contract signers, guards, roles, and queues — must be reviewed as an interacting system, not as isolated contracts.
+4. **Incident-response tooling should exist before incidents.** Exposure scanners, dashboards, and remediation builders are far more effectively maintained continuously than built mid-incident.
+
+---
+
+## 12\. Closing statement
+
+We apologize to every user and integrator affected by this vulnerability. Zodiac modules secure critical on-chain operations, and we did not meet the standard our users should expect. Our module-authentication logic accepted an ERC-1271 contract-signature check that had failed.  
+**We are grateful to the users, integrators, Gnosis, Safe, SEAL 911, and independent researchers who helped identify, contain, and remediate the issue.**  
+Composability creates shared responsibility across module authors, infrastructure providers, integrators, and users — and that makes clear security boundaries our obligation. Our immediate priority was to reduce user risk; our next priority is to make this class of issue harder to introduce and easier to detect.
+
+## 13\. References
+
+Patched Delay Modifier: [https://github.com/gnosisguild/zodiac/tree/master/mastercopies/delay/1.1.1](https://github.com/gnosisguild/zodiac/tree/master/mastercopies/delay/1.1.1)
+
+Patched Roles Modifier: [https://github.com/gnosisguild/zodiac/tree/master/mastercopies/roles/2.1.1](https://github.com/gnosisguild/zodiac/tree/master/mastercopies/roles/2.1.1)
+
+Signature patch audit:  
+[https://github.com/gnosisguild/zodiac/blob/master/audits/ZodiacJune2026.pdf](https://github.com/gnosisguild/zodiac/blob/master/audits/ZodiacJune2026.pdf)
+
+Self-service checker and remediation app:  
+[https://app.zodiac.eco/public/fallback-handler](https://app.zodiac.eco/public/fallback-handler)
