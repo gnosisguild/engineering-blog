@@ -22,7 +22,7 @@ The root cause was narrow and specific: the modules' ERC-1271 contract-signature
 
 After identifying the root cause on 1 June, we immediately contacted identified affected users privately, published a self-service checker and remediation app, and disclosed publicly on 2 June. We continued whitehat recovery of remaining at-risk Safes in the following days. Patched modules — **Delay v1.1.1** and **Roles v2.1.1** — were released after passing an audit from Gnosis.
 
-Containment was largely successful: roughly 99.77% of Roles and 99.18% of Delay value at risk was secured before it could be taken, and realized loss outside Gnosis Pay was very limited — about $4500 across \~30 accounts holding mostly small amounts. Gnosis Pay, whose user account Safes use the Delay module, was the primary exploited deployment and is expected to report on its own accounts separately.
+Containment was largely successful: roughly 99.77% of Roles and 99.18% of Delay value at risk was secured before it could be taken, and confirmed realized loss outside Gnosis Pay was very limited — about $4500 across \~30 accounts holding mostly small amounts. Gnosis Pay, whose user account Safes use the Delay module, was the primary exploited deployment and is expected to report on its own accounts separately.
 
 ## 2\. Impact
 
@@ -57,15 +57,15 @@ Containment was largely successful: roughly 99.77% of Roles and 99.18% of Delay 
 | Networks affected                           | Gnosis, Base, Ethereum; armed but not executed on: BSC, Polygon, Arbitrum                                                                                                   |
 | Assets affected                             | Roles: mainly LSTs (stETH, osETH, cbETH, swETH), COMP, RWA/BTC (cbBTC, WBTC, Ondo), curated-vault stablecoins. Delay/Gnosis Pay: USDC.e, GNO, EURe, GBPe, xDAI, USDC, arUSD |
 
-Roles \- **attributable value at risk:** originally **$85,474,814** → now remaining \~**$200,000** (secured 99.77%, nothing lost) – remaining risk is low because permissions don’t allow draining funds
+Roles \- **attributable value at risk** (per our attribution analysis): originally \~**$85,474,814** → now remaining \~**$200,000** (secured \~99.77%, no confirmed loss) – remaining risk is low because permissions don’t allow draining funds
 
-Delay \- **attributable value at risk:** originally **$633,564** (excluding Gnosis Pay accounts) → now remaining \~**$700** (secured 99.18%, lost 0.71%)
+Delay \- **attributable value at risk:** originally \~**$633,564** (excluding Gnosis Pay accounts) → now remaining \~**$700** (secured \~99.18%, \~0.71% confirmed lost)
 
 **Note on the most visible deployment.** Gnosis Pay was the primary exploited deployment and accounts for the public reporting above. This post-mortem is about the **Zodiac module vulnerability**, which affected multiple deployments; Gnosis Pay is the largest known case, not the whole scope.
 
 ### 2.3 On user losses
 
-The priority throughout this incident was to prevent loss, and most value at risk was secured before a successful exploitation: approximately **99.77% of Roles-attributable value** and **99.18% of Delay-attributable value**. Confirmed realized losses outside of Gnosis Pay were negligible — on the order of $4500 across roughly 30 accounts, most of them holding very small amounts.
+The priority throughout this incident was to prevent loss, and most value at risk was secured before a successful exploitation: approximately **99.77% of Roles-attributable value** and **99.18% of Delay-attributable value** (per our attribution analysis). Confirmed realized losses outside of Gnosis Pay were negligible — on the order of $4500 across roughly 30 accounts, most of them holding very small amounts.
 
 The largest realized losses were concentrated in Gnosis Pay, the most exploited deployment. Gnosis Pay has publicly committed to cover its affected users' losses ([public statement](https://x.com/koeppelmann/status/2061372038628196356)); questions about Gnosis Pay reimbursement are handled directly by Gnosis Pay.
 
