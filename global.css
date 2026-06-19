@@ -55,3 +55,42 @@ hr {
   border-bottom: 1px solid #ccc;
   width: 100%;
 }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5em 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+thead th {
+  background-color: #e6e8ef;
+  border-bottom: 2px solid #aab;
+}
+
+th,
+td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.6em 0.8em;
+}
+
+tbody tr {
+  border-bottom: 1px solid #d4d7e0;
+}
+
+tbody tr:nth-child(odd) {
+  background-color: #f1f2f7;
+}
+
+tbody tr:hover {
+  background-color: #e6e8ef;
+}
+
+/* Emphasize the metric (first) column so each row reads as one group */
+tbody td:first-child {
+  width: 30%;
+  font-weight: 500;
+  color: #1a1a2e;
+}
